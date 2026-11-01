@@ -1,6 +1,6 @@
 {
   "name": "@dskripchenko/syntax",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Syntax highlighting with zero runtime dependencies: 17 programming languages (JavaScript, TypeScript, Python, Go, Rust, Java, Kotlin, C#, Swift, C, C++, PHP, Ruby, Lua, Shell, PowerShell, SQL) and data formats, markup and the files around code (JSON, YAML, XML, HTML, CSS, TOML, INI, .env, CSV, Markdown, diff, logs, Dockerfile, Makefile, GraphQL, Protocol Buffers, HTTP)",
   "keywords": [
     "syntax-highlighting",
