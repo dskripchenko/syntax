@@ -1,5 +1,11 @@
 # @dskripchenko/syntax
 
+## 0.3.1
+
+### Patch Changes
+
+- f69790b: PHP: a fragment without `<?` (a snippet in documentation, `$x = strlen($s);`) is highlighted as code rather than as a page of HTML. Aliases `pgsql` (SQL) and `markup` (HTML).
+
 ## 0.3.0
 
 ### Minor Changes
