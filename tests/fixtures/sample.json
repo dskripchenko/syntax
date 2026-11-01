@@ -1,0 +1,8 @@
+{
+  "name": "@scope/app",
+  "version": "1.2.3",
+  "private": true,
+  "scripts": { "build": "vite build", "test": "vitest run" },
+  "values": [1, -2.5, 3e10, null, false, "a \"quoted\" string"],
+  "nested": { "deep": { "deeper": [] } }
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE note SYSTEM "note.dtd">
+<!-- A note -->
+<note id="n1" xmlns:x="urn:x">
+  <to priority='high'>Tove &amp; friends</to>
+  <x:body><![CDATA[ <b>raw</b> & text ]]></x:body>
+  <empty/>
+</note>

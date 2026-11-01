@@ -1,0 +1,13 @@
+syntax = "proto3";
+package shop.v1;
+
+// An order.
+message Order {
+  string id = 1;
+  repeated Line lines = 2;
+  map<string, int64> totals = 3;
+}
+
+service Orders {
+  rpc Get(GetRequest) returns (Order);
+}

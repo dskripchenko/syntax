@@ -1,0 +1,16 @@
+# Cargo manifest
+[package]
+name = "shop"
+version = "0.1.0"
+edition = '2021'
+published = 2026-11-01T10:00:00Z
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+"quoted key" = 0x1F
+
+[[bin]]
+name = "server"
+description = """
+multi-line
+"""

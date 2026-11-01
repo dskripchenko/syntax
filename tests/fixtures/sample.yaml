@@ -1,0 +1,21 @@
+# Deploy configuration
+---
+name: shop
+version: 1.2
+enabled: true
+release: 2026-11-01
+anchors:
+  base: &base
+    image: "node:22"
+    retries: 3
+  web:
+    <<: *base
+    command: !!str npm start
+    description: |
+      A multi-line
+      description: with a colon
+    folded: >-
+      folded text
+tags: [web, api, 'quoted, item']
+empty: ~
+...

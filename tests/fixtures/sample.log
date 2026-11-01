@@ -1,0 +1,7 @@
+2026-11-01T10:15:30.123Z INFO  [http] GET /orders/42 200 12ms user=anna ip=10.0.0.12
+2026-11-01T10:15:31.004Z WARN  [db] slow query took 1.2s
+2026-11-01 10:15:32,551 ERROR OrderService - failed to charge: PaymentException: card declined
+    at com.shop.Payments.charge(Payments.java:42)
+    at com.shop.Orders.pay(Orders.java:17)
+Nov  1 10:15:33 host sshd[1234]: DEBUG connection from 192.168.1.5 port 52214
+127.0.0.1 - - [01/Nov/2026:10:15:34 +0000] "GET /index.html HTTP/1.1" 304 0

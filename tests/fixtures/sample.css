@@ -1,0 +1,11 @@
+/* Theme */
+:root { --accent: #0969da; }
+.card > .title:hover,
+#main a[href^="http"]::after {
+  color: var(--accent);
+  margin: 0 auto !important;
+  width: calc(100% - 2rem);
+}
+@media (max-width: 600px) {
+  .card { padding: .5em 1em; }
+}
