@@ -135,6 +135,50 @@ oder eines Tags bleibt, `} else {` wird also nie versteckt.
 - **Überschriften** für Markdown: ein Abschnitt bis zur nächsten Überschrift
   seiner Ebene oder höher; ein Codeblock für sich.
 
+## Große Dateien
+
+```ts
+import { LineHighlighter } from '@dskripchenko/syntax'
+
+const h = new LineHighlighter(text, 'log')
+h.lineCount        // 449 473
+h.html(1000, 1040) // die 40 sichtbaren Zeilen als HTML, jede vollständig
+```
+
+`LineHighlighter` hebt ein Fenster von Zeilen hervor, ohne die ganze Datei zu
+zerlegen: er geht vom nächsten *Kontrollpunkt* — dem Zustand des Tokenizers,
+alle 500 Zeilen im Vorbeigehen gespeichert — bis zum Ende des Fensters.
+Scrollen kostet, was gezeigt wird; der erste Sprung ans Ende eines 100-MB-Logs
+dauert etwa eine halbe Sekunde, jedes spätere Fenster in der Nähe wenige
+Millisekunden. Die Zeilen sind dieselben, die `highlightLines` für den ganzen
+Text liefert (ein 300 Zeilen weiter oben geöffneter Kommentar bleibt einer).
+`html(from, to, maxLength)` schneidet eine lange Zeile — minifizierten Code —
+nach `maxLength` Zeichen ab; `tokens(from, to)` liefert die Tokens; `line(i)`
+den Text.
+
+## Logs
+
+```ts
+import { logEntries, logLevelOf } from '@dskripchenko/syntax'
+
+logEntries(text)
+// [{ start: 1, end: 1, level: 'info' }, { start: 2, end: 9, level: 'error' }, …]
+```
+
+`logEntries` liest ein Log als Einträge: Beginnt das Log mit einem Zeitstempel
+(oder tragen die meisten Zeilen einen), ist ein Eintrag eine Zeile mit
+Zeitstempel und die Zeilen bis zur nächsten — ein Stacktrace, ein
+ausgegebenes Objekt, ein mehrzeiliger SQL-Fehler bleiben bei der Zeile, die
+sie gemeldet hat; sonst ist jede Zeile ein Eintrag, außer denen, die sie
+fortsetzen (eingerückt, `at …`, `Caused by`, `#0 …`).
+
+Die Stufe — `error`, `warning`, `info` oder `debug` (oder `null`) — nimmt
+`logLevelOf` aus der ersten Zeile des Eintrags: ein Stufenwort in
+Großbuchstaben (`ERROR`, `local.WARNING:`, `FAIL`), ein Feld (`level=warn`,
+`"level":"error"`), eine eingeklammerte (`[crit]`) oder der Status eines
+Zugriffslogs (5xx ein Fehler, 4xx eine Warnung). Das erste davon zählt:
+`INFO retrying after an ERROR` ist info.
+
 ## Eine eigene Sprache
 
 Eine Grammatik besteht aus Zuständen mit Regeln, die an jeder Stelle der

@@ -121,6 +121,38 @@ validate('{\n  "a": 1,\n}', 'json')
 - YAML 和 Python 按**缩进**折叠。
 - Markdown 按**标题**折叠：一节直到同级或更高级别的下一个标题；代码块单独折叠。
 
+## 大文件
+
+```ts
+import { LineHighlighter } from '@dskripchenko/syntax'
+
+const h = new LineHighlighter(text, 'log')
+h.lineCount        // 449 473
+h.html(1000, 1040) // 可见的 40 行，HTML，每行自成完整
+```
+
+`LineHighlighter` 高亮一段行窗口而无需解析整个文件：它从最近的*检查点*——分词器经过时每 500 行保存一次的状态——
+开始，一直处理到窗口末尾。滚动的开销只取决于显示的内容；首次跳到 100 MB 日志的末尾约需半秒，此后附近的每个窗口只需几毫秒。
+得到的行与 `highlightLines` 对整个文本给出的结果相同（在上方 300 行处开始的注释依然是注释）。
+`html(from, to, maxLength)` 会把过长的行（压缩后的代码）截断到 `maxLength` 个字符；`tokens(from, to)` 返回 token；
+`line(i)` 返回该行文本。
+
+## 日志
+
+```ts
+import { logEntries, logLevelOf } from '@dskripchenko/syntax'
+
+logEntries(text)
+// [{ start: 1, end: 1, level: 'info' }, { start: 2, end: 9, level: 'error' }, …]
+```
+
+`logEntries` 将日志读成条目：若日志以时间戳开头（或大多数行带有时间戳），一个条目就是一行带时间戳的行及其后直到下一条的各行——
+堆栈跟踪、打印出的对象、多行 SQL 错误都归属于报告它们的那一行；否则每行是一个条目，但续行（缩进、`at …`、`Caused by`、`#0 …`）除外。
+
+级别——`error`、`warning`、`info` 或 `debug`（或 `null`）——由 `logLevelOf` 从条目首行读取：大写的级别词（`ERROR`、
+`local.WARNING:`、`FAIL`）、字段（`level=warn`、`"level":"error"`）、方括号中的级别（`[crit]`），或访问日志的状态码
+（5xx 为错误，4xx 为警告）。以最先出现者为准：`INFO retrying after an ERROR` 是 info。
+
 ## 添加自己的语言
 
 语法由若干状态组成，每个状态是一组规则，在每个位置按顺序尝试；规则的模式就在该位置匹配（变为 sticky）。

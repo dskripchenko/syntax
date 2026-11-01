@@ -11,12 +11,16 @@
 import { allGrammars, grammarOf, register, tokenize, type Token } from './engine'
 import { CODE } from './languages/code'
 import { FORMATS } from './languages/formats'
+import { span } from './html'
 
 export type { Grammar, Rule, Token, TokenType, Before, Embedded } from './engine'
 export { tokenize, register } from './engine'
 export { THEME_CSS, TOKEN_TYPES } from './theme'
 export { validate, canValidate, VALIDATED, type Diagnostic } from './validate'
 export { foldRanges, type FoldRange } from './fold'
+export { escapeHtml } from './html'
+export { LineHighlighter } from './lines'
+export { logEntries, logLevelOf, LOG_LEVELS, type LogEntry, type LogLevel } from './log'
 
 for (const g of [...CODE, ...FORMATS]) register(g)
 
@@ -76,10 +80,6 @@ export function languageOf(fileName: string, firstLine = ''): string | null {
   return null
 }
 
-const ESCAPE: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }
-export const escapeHtml = (text: string): string => text.replace(/[&<>"]/g, (c) => ESCAPE[c]!)
-
-const span = (t: Token): string => (t.type === 'plain' ? escapeHtml(t.text) : `<span class="sx-${t.type}">${escapeHtml(t.text)}</span>`)
 
 /** The text as HTML: a span per token (plain text bare), everything escaped. A language not known gives the text escaped. */
 export function highlight(code: string, language: string): string {

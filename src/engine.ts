@@ -127,29 +127,62 @@ function compile(grammar: Grammar): Compiled {
 /** How deep embedded grammars may go (a Markdown block in Markdown in …). */
 const MAX_EMBED = 4
 
+/** Where a tokenizer stands between two matches: enough to go on from there. */
+export interface TokenizerState {
+  readonly pos: number
+  readonly stack: readonly string[]
+  readonly before: Before
+}
+
+export const START: TokenizerState = { pos: 0, stack: ['root'], before: { type: null, text: '' } }
+
 /** The text as tokens of a language; a language not known gives one plain token. */
 export function tokenize(code: string, language: string, depth = 0): Token[] {
-  const grammar = grammarOf(language)
-  if (!grammar || code === '') return code === '' ? [] : [{ type: 'plain', text: code }]
-  const { states } = compile(grammar)
   const out: Token[] = []
-  const stack: string[] = ['root']
-  let before: Before = { type: null, text: '' }
-
-  const emit = (type: TokenType, text: string): void => {
-    if (text === '') return
+  run(code, language, depth, START, (type, text) => {
     const last = out[out.length - 1]
     if (last && last.type === type) last.text += text
     else out.push({ type, text })
+  })
+  return out
+}
+
+/**
+ * Tokenize from a state, handing every piece to `sink`; between two matches
+ * `stop` is asked whether to end there (it may take the state, to go on
+ * later). Returns the state it ended at.
+ */
+export function run(
+  code: string,
+  language: string,
+  depth: number,
+  from: TokenizerState,
+  sink: (type: TokenType, text: string) => void,
+  stop?: (pos: number, state: () => TokenizerState) => boolean,
+): TokenizerState {
+  const grammar = grammarOf(language)
+  if (!grammar) {
+    if (from.pos < code.length) sink('plain', code.slice(from.pos))
+    return { ...from, pos: code.length }
+  }
+  const { states } = compile(grammar)
+  const stack: string[] = [...from.stack]
+  let before: Before = from.before
+
+  const emit = (type: TokenType, text: string): void => {
+    if (text === '') return
+    sink(type, text)
     // A name counts (plain, but a value: `b / 2` divides); white space and comments do not.
     if (type !== 'comment' && text.trim() !== '') before = { type, text }
   }
 
-  let pos = 0
+  let pos = from.pos
+  const snapshot = (): TokenizerState => ({ pos, stack: [...stack], before })
   // A rule that matches nothing may change the state, but not twice in a row at one place.
   let emptyAt = -1
   let emptyCount = 0
   while (pos < code.length) {
+    if (stop && emptyAt !== pos && stop(pos, snapshot)) return snapshot()
     const rules = states[stack[stack.length - 1]!] ?? states.root!
     let matched = false
     for (const { rule, re } of rules) {
@@ -203,5 +236,5 @@ export function tokenize(code: string, language: string, depth = 0): Token[] {
       pos++
     }
   }
-  return out
+  return snapshot()
 }
