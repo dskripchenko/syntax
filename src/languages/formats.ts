@@ -119,7 +119,7 @@ export const xml: Grammar = {
 export const html: Grammar = {
   id: 'html',
   name: 'HTML',
-  aliases: ['htm', 'xhtml', 'vue', 'svelte'],
+  aliases: ['htm', 'xhtml', 'vue', 'svelte', 'markup'],
   extensions: ['.html', '.htm', '.xhtml', '.vue', '.svelte'],
   states: markup(true),
 }
