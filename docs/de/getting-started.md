@@ -89,6 +89,52 @@ Umgestalten mit wenigen Deklarationen:
 | `protobuf` | Protocol Buffers | `proto` | `.proto` |
 | `http` | HTTP | `rest` | `.http` `.rest` |
 
+## Prüfung
+
+```ts
+import { validate } from '@dskripchenko/syntax'
+
+validate('{\n  "a": 1,\n}', 'json')
+// [{ line: 3, column: 1, message: 'expected a string key', severity: 'error' }]
+```
+
+`validate(text, language)` sagt, wo eine Datendatei nicht dem entspricht, was
+ihr Format erlaubt — Zeile, Spalte, Meldung — in der Reihenfolge des Fundes,
+höchstens 50. **Fehler** brechen das Format; **Warnungen** erlaubt es, aber sie
+sind fast immer Versehen.
+
+| Sprache | Geprüft |
+|---|---|
+| `json` | striktes JSON (RFC 8259); ein doppelter Schlüssel ist eine Warnung |
+| `jsonc` | dasselbe mit Kommentaren und nachgestellten Kommas (tsconfig.json, VS-Code-Einstellungen, JSON5-Dateien); die Positionen bleiben die des Textes |
+| `jsonl` | jede nicht leere Zeile ein JSON-Wert |
+| `yaml` | YAML 1.2, Dokument für Dokument (`---`); Direktiven, Anker, Tags, Blockskalare. Konstrukte, die es nicht liest — komplexe Schlüssel, Sammlungen als Schlüssel —, beenden die Prüfung still, statt gemeldet zu werden |
+| `xml` | Wohlgeformtheit: eine Wurzel, Tags in Reihenfolge geschlossen, Attribute je einmal und in Anführungszeichen, Entitäten (und die einer DTD), Kommentare, die Deklaration zuerst. Keine DTD- oder Schemaprüfung |
+| `toml` | Strings, Zahlen, Daten, Arrays, Inline-Tabellen; Schlüssel und Tabellen je einmal definiert |
+| `csv`, `tsv` | Anführungszeichen geschlossen; jede Zeile so viele Felder wie die erste (Warnung); das Trennzeichen aus der ersten Zeile; `#`-Zeilen als Kommentare |
+| `ini` | Abschnitte geschlossen; Schlüsselzeilen; ein doppelter Schlüssel im Abschnitt (Warnung; `key[]` sammelt) |
+| `dotenv` | `KEY=value`-Zeilen; Anführungszeichen geschlossen; ein doppelter Schlüssel |
+
+`canValidate(language)` sagt, ob eine Sprache geprüft wird; für die anderen
+liefert `validate` nichts. Schweigen ist kein Beweis der Gültigkeit.
+
+## Falten
+
+`foldRanges(text, language)` liefert, was ein Leser falten kann: Zeilenbereiche
+`{ start, end }`, ab 1. Die erste Zeile bleibt sichtbar (sie benennt den
+Bereich: eine öffnende Klammer, ein Tag, ein Schlüssel, eine Überschrift); die
+Zeilen danach bis `end` falten sich weg — die Zeile einer schließenden Klammer
+oder eines Tags bleibt, `} else {` wird also nie versteckt.
+
+- **Klammern** `{ [ (` für Code und JSON — aus den Tokens gelesen, eine Klammer
+  in einem String oder Kommentar faltet also nichts; mehrzeilige Kommentare
+  falten auch.
+- **Tags** für XML und HTML (die leeren Elemente von HTML, `<br>`, öffnen
+  nichts).
+- **Einrückung** für YAML und Python.
+- **Überschriften** für Markdown: ein Abschnitt bis zur nächsten Überschrift
+  seiner Ebene oder höher; ein Codeblock für sich.
+
 ## Eine eigene Sprache
 
 Eine Grammatik besteht aus Zuständen mit Regeln, die an jeder Stelle der

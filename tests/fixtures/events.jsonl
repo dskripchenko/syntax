@@ -1,0 +1,2 @@
+{"at": "2026-11-01T10:00:00Z", "type": "order.created", "id": 1}
+{"at": "2026-11-01T10:00:02Z", "type": "order.paid", "id": 1, "amount": 12.5}

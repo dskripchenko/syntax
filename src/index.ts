@@ -15,6 +15,8 @@ import { FORMATS } from './languages/formats'
 export type { Grammar, Rule, Token, TokenType, Before, Embedded } from './engine'
 export { tokenize, register } from './engine'
 export { THEME_CSS, TOKEN_TYPES } from './theme'
+export { validate, canValidate, VALIDATED, type Diagnostic } from './validate'
+export { foldRanges, type FoldRange } from './fold'
 
 for (const g of [...CODE, ...FORMATS]) register(g)
 
@@ -54,6 +56,7 @@ export function languageOf(fileName: string, firstLine = ''): string | null {
   const grammars = allGrammars()
   const byName = grammars.find((g) => g.filenames?.some((f) => f.toLowerCase() === lower))
   if (byName) return byName.id
+  if (/^(?:tsconfig|jsconfig)\..+\.json$/i.test(name)) return 'jsonc'
   // The longest extension that fits: `.d.ts` before `.ts`, `.env.local` by the filenames above.
   let best: { id: string; length: number } | null = null
   for (const g of grammars) {

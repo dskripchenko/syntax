@@ -88,6 +88,49 @@ few declarations:
 | `protobuf` | Protocol Buffers | `proto` | `.proto` |
 | `http` | HTTP | `rest` | `.http` `.rest` |
 
+## Validation
+
+```ts
+import { validate } from '@dskripchenko/syntax'
+
+validate('{\n  "a": 1,\n}', 'json')
+// [{ line: 3, column: 1, message: 'expected a string key', severity: 'error' }]
+```
+
+`validate(text, language)` tells where a data file is not what its format
+allows — line, column, message — in the order found, at most 50. **Errors**
+break the format; **warnings** are allowed by it but almost always mistakes.
+
+| Language | Checked |
+|---|---|
+| `json` | strict JSON (RFC 8259); a key given twice is a warning |
+| `jsonc` | the same with comments and trailing commas (tsconfig.json, VS Code's settings, JSON5 files); positions stay those of the text |
+| `jsonl` | every non-empty line one JSON value |
+| `yaml` | YAML 1.2, document by document (`---`); directives, anchors, tags, block scalars. Constructs it does not read — complex keys, collections as keys — end the check quietly rather than being reported |
+| `xml` | well-formedness: one root, tags closed in order, attributes once each and quoted, entities (and those a DTD declares), comments, the declaration first. Not a DTD or schema |
+| `toml` | strings, numbers, dates, arrays, inline tables; keys and tables defined once |
+| `csv`, `tsv` | quotes closed; every row as many fields as the first (a warning); the separator found from the first line; `#` lines taken as comments |
+| `ini` | sections closed; key lines; a key given twice in a section (a warning; `key[]` collects) |
+| `dotenv` | `KEY=value` lines; quotes closed; a key given twice |
+
+`canValidate(language)` says whether a language is checked; for the others
+`validate` gives nothing. Silence is not a proof of validity.
+
+## Folding
+
+`foldRanges(text, language)` gives what a reader can fold: ranges of lines
+`{ start, end }`, 1-based. The first line stays visible (it names the range:
+an opening bracket, a tag, a key, a heading); the lines after it, up to `end`,
+fold away — a closing bracket's or tag's line stays, so `} else {` is never
+hidden.
+
+- **Brackets** `{ [ (` for code and JSON — read from the tokens, so a bracket
+  in a string or a comment folds nothing; multi-line comments fold too.
+- **Tags** for XML and HTML (HTML's void elements, `<br>`, open nothing).
+- **Indentation** for YAML and Python.
+- **Headings** for Markdown: a section up to the next heading of its level or
+  higher; a fenced block on its own.
+
 ## A language of your own
 
 A grammar is states of rules, tried in order at each position; a rule's
