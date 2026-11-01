@@ -59,6 +59,8 @@ describe('programming languages', () => {
     expect(typeOf(rs, 'rust', '#[derive(Debug, Clone)]')).toBe('meta')
     expect(typeOf(rs, 'rust', 'println!')).toBe('function')
     expect(typeOf(rs, 'rust', '0usize')).toBe('number')
+    // Block comments nest in Rust.
+    expect(typeOf(rs, 'rust', '/* block /* nested */ comment */')).toBe('comment')
 
     const java = sample('sample.java')
     expect(typeOf(java, 'java', 'SELECT id, total', true)).toBe('string')

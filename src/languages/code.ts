@@ -152,12 +152,9 @@ export const go: Grammar = {
   }),
 }
 
-export const rust: Grammar = {
-  id: 'rust',
-  name: 'Rust',
-  aliases: ['rs'],
-  extensions: ['.rs'],
-  states: cLike({
+/** Rust's block comments nest: an inner opening needs its own closing before the outer one ends. */
+const rustStates = (): Grammar['states'] => {
+  const states = cLike({
     keywords: 'as async await break const continue crate dyn else enum extern fn for if impl in let loop match mod move mut pub ref return self Self static struct super trait type unsafe use where while',
     types: 'bool char str i8 i16 i32 i64 i128 isize u8 u16 u32 u64 u128 usize f32 f64 String Vec Option Result Box',
     constants: 'true false None Some Ok Err',
@@ -171,7 +168,22 @@ export const rust: Grammar = {
       { match: /b?'(?:\\(?:x[\da-fA-F]{2}|u\{[\da-fA-F]{1,6}\}|.)|[^'\\\n])'/, token: 'string' },
       { match: /'[A-Za-z_]\w*/, token: 'type' },
     ],
-  }),
+  })
+  states.root!.splice(1, 0, { match: /\/\*/, token: 'comment', push: 'comment' })
+  states.comment = [
+    { match: /\/\*/, token: 'comment', push: 'comment' },
+    { match: /\*\//, token: 'comment', pop: 1 },
+    { match: /[^/*]+|[/*]/, token: 'comment' },
+  ]
+  return states
+}
+
+export const rust: Grammar = {
+  id: 'rust',
+  name: 'Rust',
+  aliases: ['rs'],
+  extensions: ['.rs'],
+  states: rustStates(),
 }
 
 export const java: Grammar = {
