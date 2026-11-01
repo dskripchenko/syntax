@@ -300,6 +300,8 @@ export const php: Grammar = {
   shebang: /\bphp\b/,
   states: {
     root: [
+      // A fragment without `<?` (a snippet in documentation) is code, not a page.
+      { match: /^(?![\s\S]*<\?)/, push: 'php' },
       { match: /<\?(?:php\b|=)?/, token: 'meta', push: 'php' },
       // Around the code: the page's HTML.
       { match: /[\s\S]+?(?=<\?|$(?![\s\S]))/, embed: 'html' },
@@ -440,7 +442,7 @@ export const powershell: Grammar = {
 export const sql: Grammar = {
   id: 'sql',
   name: 'SQL',
-  aliases: ['mysql', 'postgresql', 'postgres', 'sqlite', 'plsql'],
+  aliases: ['mysql', 'postgresql', 'postgres', 'pgsql', 'sqlite', 'plsql'],
   extensions: ['.sql'],
   states: {
     root: [

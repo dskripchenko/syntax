@@ -101,6 +101,17 @@ describe('programming languages', () => {
     expect(typeOf(php, 'php', '// a comment')).toBe('comment')
   })
 
+  it('PHP: a fragment without `<?` is code; a page without code stays HTML once a tag opens', () => {
+    expect(marks('$x = strlen("a"); // n', 'php')).toEqual(['variable:$x', 'operator:=', 'function:strlen', 'punctuation:(', 'string:"a"', 'punctuation:);', 'comment:// n'])
+    expect(typeOf('<p>hi</p><?= $a ?>', 'php', 'p')).toBe('tag')
+    expect(typeOf('<p>hi</p><?= $a ?>', 'php', '$a')).toBe('variable')
+  })
+
+  it('aliases a highlighter of documentation uses', () => {
+    expect(typeOf("select 1 -- c", 'pgsql', 'select')).toBe('keyword')
+    expect(typeOf('<a href="x">', 'markup', 'a')).toBe('tag')
+  })
+
   it('Ruby, Lua, Shell, PowerShell, SQL', () => {
     const rb = sample('sample.rb')
     expect(typeOf(rb, 'ruby', '=begin\nA block comment.\n=end')).toBe('comment')
