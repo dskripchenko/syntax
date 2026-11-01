@@ -1,5 +1,11 @@
 # @dskripchenko/syntax
 
+## 0.3.2
+
+### Patch Changes
+
+- 38e6395: CSS: the minus in `calc(100% - 2px)` is an operator, not a value word. HTTP: a header's value starts after the space following the colon.
+
 ## 0.3.1
 
 ### Patch Changes
