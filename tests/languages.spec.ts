@@ -107,6 +107,10 @@ describe('programming languages', () => {
     expect(typeOf('<p>hi</p><?= $a ?>', 'php', '$a')).toBe('variable')
   })
 
+  it("CSS: calc()'s minus is an operator; -webkit- values are words", () => {
+    expect(marks('a { width: calc(100% - 2px); display: -webkit-box }', 'css').filter((m) => !m.startsWith('punctuation'))).toEqual(['tag:a', 'property:width', 'function:calc', 'number:100%', 'operator:-', 'number:2px', 'property:display', 'constant:-webkit-box'])
+  })
+
   it('aliases a highlighter of documentation uses', () => {
     expect(typeOf("select 1 -- c", 'pgsql', 'select')).toBe('keyword')
     expect(typeOf('<a href="x">', 'markup', 'a')).toBe('tag')
