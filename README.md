@@ -10,7 +10,7 @@ in, HTML (or tokens) comes out: in a browser, in server-side rendering, in a
 Node script.
 
 ```ts
-import { foldRanges, highlight, highlightLines, languageOf, THEME_CSS, validate } from '@dskripchenko/syntax'
+import { foldRanges, highlight, highlightLines, languageOf, LineHighlighter, logEntries, THEME_CSS, validate } from '@dskripchenko/syntax'
 
 const language = languageOf('server.rs') ?? 'text' // by name, extension or `#!` line
 element.innerHTML = highlight(code, language) // <span class="sx-keyword">fn</span> …
@@ -24,6 +24,10 @@ style.textContent = THEME_CSS
 // What is wrong with a data file, and what can be folded.
 validate('{"a": 1,}', 'json') // [{ line: 1, column: 9, message: 'expected a string key', severity: 'error' }]
 foldRanges(code, language) // [{ start: 3, end: 10 }, …]
+
+// A 100 MB log: only the lines in view are highlighted.
+new LineHighlighter(text, 'log').html(1000, 1040)
+logEntries(text) // [{ start: 2, end: 9, level: 'error' }, …]
 ```
 
 **Programming languages:** JavaScript, TypeScript, Python, Go, Rust, Java,
@@ -37,7 +41,8 @@ GraphQL, Protocol Buffers, HTTP.
 
 **Validation** with the line, column and a message for JSON (strict, with
 comments, JSON Lines), YAML, XML, TOML, CSV/TSV, INI and `.env`; **folding**
-by brackets, tags, indentation or headings.
+by brackets, tags, indentation or headings; **big files** highlighted a
+window at a time; **logs** read as entries with their level.
 
 ## What it promises
 

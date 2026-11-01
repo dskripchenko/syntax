@@ -131,6 +131,47 @@ hidden.
 - **Headings** for Markdown: a section up to the next heading of its level or
   higher; a fenced block on its own.
 
+## Big files
+
+```ts
+import { LineHighlighter } from '@dskripchenko/syntax'
+
+const h = new LineHighlighter(text, 'log')
+h.lineCount        // 449 473
+h.html(1000, 1040) // the 40 lines in view, as HTML, each complete
+```
+
+`LineHighlighter` highlights a window of lines without tokenizing the whole
+file: it goes from the nearest *checkpoint* — the tokenizer's state kept every
+500 lines as it passes — to the end of the window. Scrolling costs what is
+shown; the first jump to the end of a 100 MB log takes about half a second,
+and every later window near it a few milliseconds. The lines are the same as
+`highlightLines` gives for the whole text (a comment opened 300 lines above is
+still a comment). `html(from, to, maxLength)` cuts a long line — minified code
+— at `maxLength` characters; `tokens(from, to)` gives the tokens instead;
+`line(i)` the text.
+
+## Logs
+
+```ts
+import { logEntries, logLevelOf } from '@dskripchenko/syntax'
+
+logEntries(text)
+// [{ start: 1, end: 1, level: 'info' }, { start: 2, end: 9, level: 'error' }, …]
+```
+
+`logEntries` reads a log as entries: when the log starts with a timestamp (or
+most of its lines do), an entry is a timestamped line and the lines up to the
+next one — a stack trace, a dumped object, a multi-line SQL error stay with
+the line that reported them; otherwise every line is an entry, except the
+ones that continue it (indented, `at …`, `Caused by`, `#0 …`).
+
+The level, `error`, `warning`, `info` or `debug` (or `null`), is taken from the
+entry's first line by `logLevelOf`: a level word in capitals (`ERROR`,
+`local.WARNING:`, `FAIL`), a field (`level=warn`, `"level":"error"`), a
+bracketed one (`[crit]`), or an access log's status (5xx an error, 4xx a
+warning). The first of them counts: `INFO retrying after an ERROR` is info.
+
 ## A language of your own
 
 A grammar is states of rules, tried in order at each position; a rule's
