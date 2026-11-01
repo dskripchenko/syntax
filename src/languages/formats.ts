@@ -135,7 +135,9 @@ const cssValue: Rule[] = [
   { match: /!important\b/, token: 'keyword' },
   { match: /[$@][\w-]+|--[\w-]+/, token: 'variable' },
   { match: /[\w-]+(?=\()/, token: 'function' },
-  { match: /[A-Za-z-]+/, token: 'constant' },
+  { match: /-*[A-Za-z][\w-]*/, token: 'constant' },
+  // An operator in calc(): `100% - 2px`.
+  { match: /-/, token: 'operator' },
 ]
 export const css: Grammar = {
   id: 'css',
@@ -438,7 +440,7 @@ export const http: Grammar = {
       LINE_COMMENT('#'),
       { match: /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|CONNECT|TRACE)([ \t]+)(\S+)/m, groups: ['keyword', 'plain', 'link'] },
       { match: /HTTP\/[\d.]+(?:[ \t]+\d{3}.*)?/, token: 'meta' },
-      { match: /^([\w-]+)(:)(.*)/m, groups: ['property', 'punctuation', 'string'] },
+      { match: /^([\w-]+)(:)[ \t]*(.*)/m, groups: ['property', 'punctuation', 'string'] },
       { match: /^\{[\s\S]*?^\}|^\[[\s\S]*?^\]/m, embed: 'json' },
       { match: /[\s\S]/, token: 'plain' },
     ],
