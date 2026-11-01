@@ -84,6 +84,43 @@ pre.innerHTML = highlight(source, languageOf('config.yaml') ?? 'text')
 | `protobuf` | Protocol Buffers | `proto` | `.proto` |
 | `http` | HTTP | `rest` | `.http` `.rest` |
 
+## 校验
+
+```ts
+import { validate } from '@dskripchenko/syntax'
+
+validate('{\n  "a": 1,\n}', 'json')
+// [{ line: 3, column: 1, message: 'expected a string key', severity: 'error' }]
+```
+
+`validate(text, language)` 指出数据文件中不符合其格式之处——行、列、消息——按发现顺序，最多 50 条。
+**错误**破坏格式；**警告**为格式所允许，但几乎总是失误。
+
+| 语言 | 检查内容 |
+|---|---|
+| `json` | 严格 JSON（RFC 8259）；重复的键为警告 |
+| `jsonc` | 同上，但允许注释和尾随逗号（tsconfig.json、VS Code 设置、JSON5 文件）；位置仍为原文本中的位置 |
+| `jsonl` | 每个非空行是一个 JSON 值 |
+| `yaml` | YAML 1.2，逐个文档（`---`）检查；指令、锚点、标签、块标量。它不读取的结构——复杂键、作为键的集合——会静默结束检查，而不是报告为错误 |
+| `xml` | 格式良好性：单一根元素、标签按顺序闭合、属性各出现一次且带引号、实体（包括 DTD 声明的）、注释、声明位于开头。不做 DTD 或 schema 校验 |
+| `toml` | 字符串、数字、日期、数组、内联表；键和表各只定义一次 |
+| `csv`、`tsv` | 引号闭合；每行字段数与首行相同（警告）；分隔符由首行判断；以 `#` 开头的行视为注释 |
+| `ini` | 节闭合；键行；节内重复的键（警告；`key[]` 用于收集多个值） |
+| `dotenv` | `KEY=value` 行；引号闭合；重复的键 |
+
+`canValidate(language)` 表示该语言是否会被检查；其他语言 `validate` 不返回任何内容。没有报告并不证明文件有效。
+
+## 折叠
+
+`foldRanges(text, language)` 给出读者可以折叠的部分：行范围 `{ start, end }`，从 1 开始。首行保持可见
+（它命名这个范围：左括号、标签、键、标题）；其后直到 `end` 的行被折叠——右括号或闭合标签所在的行保留，
+因此 `} else {` 永远不会被隐藏。
+
+- 代码和 JSON 按**括号** `{ [ (` 折叠——从 token 中读取，因此字符串或注释中的括号不会折叠任何内容；多行注释也可折叠。
+- XML 和 HTML 按**标签**折叠（HTML 的空元素如 `<br>` 不开启任何范围）。
+- YAML 和 Python 按**缩进**折叠。
+- Markdown 按**标题**折叠：一节直到同级或更高级别的下一个标题；代码块单独折叠。
+
 ## 添加自己的语言
 
 语法由若干状态组成，每个状态是一组规则，在每个位置按顺序尝试；规则的模式就在该位置匹配（变为 sticky）。

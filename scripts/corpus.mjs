@@ -3,7 +3,7 @@
 // it reads whatever is on the machine (`pnpm corpus [dir]`, built first).
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { languageOf, tokenize } from '../dist/index.mjs'
+import { canValidate, foldRanges, languageOf, tokenize, validate } from '../dist/index.mjs'
 
 const root = process.argv[2] ?? join(import.meta.dirname, '..', '..')
 const SKIP = new Set(['node_modules', '.git', 'dist', 'vendor', 'build', 'coverage', '.next', 'target', '.venv', 'storage', 'public'])
@@ -31,6 +31,8 @@ const walk = (dir) => {
 walk(root)
 
 const byLanguage = new Map()
+const flagged = []
+let checked = 0
 const broken = []
 const slow = []
 let bytes = 0
@@ -52,12 +54,20 @@ for (const path of files) {
   ms += took
   byLanguage.set(language, (byLanguage.get(language) ?? 0) + 1)
   if (tokens.map((t) => t.text).join('') !== text) broken.push(path)
+  foldRanges(text, language)
+  if (canValidate(language)) {
+    checked++
+    const found = validate(text, language).filter((d) => d.severity === 'error')
+    if (found.length) flagged.push([path, language, found[0]])
+  }
   // More than 20 ms per 100 KB is not linear any more.
   if (took > 20 + (text.length / 100_000) * 20) slow.push([path, Math.round(took), text.length])
 }
 console.log(`files: ${[...byLanguage.values()].reduce((a, b) => a + b, 0)} in ${byLanguage.size} languages`)
 console.log([...byLanguage].sort((a, b) => b[1] - a[1]).map(([l, n]) => `${l} ${n}`).join(', '))
 console.log(`throughput: ${(bytes / 1024 / 1024).toFixed(1)} MB in ${Math.round(ms)} ms (${((bytes / 1024 / 1024) / (ms / 1000)).toFixed(1)} MB/s)`)
+console.log(`validated: ${checked}, with errors: ${flagged.length}`)
+for (const [p, l, d] of flagged.slice(0, 60)) console.log('  ', l, p.replace(root, ''), `${d.line}:${d.column}`, d.message)
 console.log(`text not kept: ${broken.length}`)
 for (const p of broken.slice(0, 20)) console.log('  ', p)
 console.log(`slow: ${slow.length}`)

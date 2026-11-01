@@ -5,9 +5,9 @@ import { BLOCK_COMMENT, DQ, IDENT, LINE_COMMENT, NUMBER, SQ, TYPE_NAME, words, W
 export const json: Grammar = {
   id: 'json',
   name: 'JSON',
-  aliases: ['jsonc', 'json5', 'jsonl', 'ndjson', 'geojson'],
-  extensions: ['.json', '.jsonc', '.json5', '.jsonl', '.ndjson', '.geojson', '.webmanifest', '.har'],
-  filenames: ['.babelrc', '.eslintrc', '.prettierrc', 'composer.lock'],
+  aliases: ['geojson'],
+  extensions: ['.json', '.geojson', '.webmanifest', '.har'],
+  filenames: ['composer.lock'],
   states: {
     root: [
       WS,
@@ -24,6 +24,25 @@ export const json: Grammar = {
       { match: /[{}[\],:]/, token: 'punctuation' },
     ],
   },
+}
+
+/** JSON with comments and trailing commas: tsconfig.json, VS Code's settings, `.jsonc`, JSON5. */
+export const jsonc: Grammar = {
+  id: 'jsonc',
+  name: 'JSON with comments',
+  aliases: ['json5'],
+  extensions: ['.jsonc', '.json5'],
+  filenames: ['tsconfig.json', 'jsconfig.json', '.babelrc', '.eslintrc', '.eslintrc.json', '.prettierrc', 'settings.json', 'launch.json', 'tasks.json', 'extensions.json', 'devcontainer.json', '.devcontainer.json', 'turbo.json', 'deno.json', 'deno.jsonc'],
+  states: json.states,
+}
+
+/** JSON Lines: one value a line. */
+export const jsonl: Grammar = {
+  id: 'jsonl',
+  name: 'JSON Lines',
+  aliases: ['ndjson'],
+  extensions: ['.jsonl', '.ndjson'],
+  states: json.states,
 }
 
 export const yaml: Grammar = {
@@ -426,4 +445,4 @@ export const http: Grammar = {
   },
 }
 
-export const FORMATS: Grammar[] = [json, yaml, xml, html, css, toml, ini, env, csv, markdown, diff, log, dockerfile, makefile, graphql, protobuf, http]
+export const FORMATS: Grammar[] = [json, jsonc, jsonl, yaml, xml, html, css, toml, ini, env, csv, markdown, diff, log, dockerfile, makefile, graphql, protobuf, http]

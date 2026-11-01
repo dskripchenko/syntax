@@ -1,0 +1,9 @@
+{
+  // Compiler options
+  "compilerOptions": {
+    "target": "ES2022",
+    "strict": true, /* everything */
+    "paths": { "@/*": ["src/*"], },
+  },
+  "include": ["src", "tests",],
+}
