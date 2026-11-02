@@ -75,6 +75,7 @@ pre.innerHTML = highlight(source, languageOf('config.yaml') ?? 'text')
 | `ini` | INI | `cfg`, `conf`, `properties`, `editorconfig`, `gitconfig` | `.ini` `.cfg` `.conf` `.properties` `.desktop` `.service` `.editorconfig` `.gitconfig` `.editorconfig` `.gitconfig` `.npmrc` |
 | `dotenv` | .env | `env` | `.env` `.env` `.env.example` `.env.local` |
 | `csv` | CSV | `tsv` | `.csv` `.tsv` `.tab` |
+| `latex` | LaTeX | `tex`, `math`, `katex` | `.tex` `.sty` `.cls` `.ltx` |
 | `markdown` | Markdown | `md`, `mdx` | `.md` `.markdown` `.mdown` `.mkd` `.mdx` |
 | `diff` | Diff | `patch`, `udiff` | `.diff` `.patch` |
 | `log` | Log | `logs` | `.log` `.out` `.err` |

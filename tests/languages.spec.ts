@@ -254,6 +254,25 @@ describe('formats', () => {
     expect(marks('---\ntitle: Hi\n---\n# H', 'markdown').slice(0, 3)).toEqual(['meta:---\n', 'property:title', 'punctuation::'])
   })
 
+  it('Markdown: TeX math in its dollars (prices stay text), ==highlights==', () => {
+    expect(marks('Euler $e^{i\\pi}$, a price $5 and $10.', 'markdown')).toEqual([
+      // The group's closing brace and the closing dollar: one run of punctuation.
+      'punctuation:$', 'operator:^', 'punctuation:{', 'keyword:\\pi', 'punctuation:}$',
+    ])
+    expect(marks('$$\n\\frac{1}{2}\n$$', 'markdown')).toEqual(['punctuation:$$', 'keyword:\\frac', 'punctuation:{', 'number:1', 'punctuation:}{', 'number:2', 'punctuation:}', 'punctuation:$$'])
+    expect(marks('A ==marked== word, a == b', 'markdown')).toEqual(['warning:==marked=='])
+    expect(marks('```math\nx^2\n```', 'markdown')).toEqual(['meta:```math\n', 'operator:^', 'number:2', 'meta:```'])
+  })
+
+  it('LaTeX: commands, environments, comments, math shifts, escapes', () => {
+    const tex = sample('sample.tex')
+    expect(typeOf(tex, 'latex', '\\documentclass')).toBe('keyword')
+    expect(typeOf(tex, 'latex', '% for align')).toBe('comment')
+    expect(typeOf(tex, 'latex', 'align')).toBe('type')
+    expect(typeOf(tex, 'latex', '\\%')).toBe('escape')
+    expect(typeOf(tex, 'latex', '0.004')).toBe('number')
+  })
+
   it('Markdown: headings, emphasis, links, a fenced block in its language', () => {
     const md = sample('sample.md')
     expect(typeOf(md, 'markdown', 'Handbook', true)).toBe('heading')

@@ -35,8 +35,8 @@ Kotlin, C#, Swift, C, C++, PHP, Ruby, Lua, Shell, PowerShell, SQL.
 
 **Formats and the files around code:** JSON (with comments, JSON Lines),
 YAML, XML (SVG, plists, project files), HTML (with its scripts and styles),
-CSS (SCSS, Less), TOML, INI, `.env`, CSV/TSV, Markdown (fenced blocks in their
-language), diff, logs (levels, times, stack traces), Dockerfile, Makefile,
+CSS (SCSS, Less), TOML, INI, `.env`, CSV/TSV, LaTeX, Markdown (fenced blocks in
+their language, TeX math, `==highlights==`), diff, logs (levels, times, stack traces), Dockerfile, Makefile,
 GraphQL, Protocol Buffers, HTTP.
 
 **Validation** with the line, column and a message for JSON (strict, with
