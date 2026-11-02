@@ -1,5 +1,11 @@
 # @dskripchenko/syntax
 
+## 0.4.1
+
+### Patch Changes
+
+- 7a7a61e: Markdown: `#tags` (a letter in them, at the start of a word — not `C#`, `#123` or a heading) highlighted as `type`.
+
 ## 0.4.0
 
 ### Minor Changes
