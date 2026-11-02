@@ -234,6 +234,10 @@ describe('formats', () => {
     expect(marks('See [the docs][docs] and [^1].', 'markdown')).toEqual(['punctuation:[', 'string:the docs', 'punctuation:][', 'variable:docs', 'punctuation:]', 'meta:[^1]'])
     expect(marks('[docs]: https://e.com/d "D"', 'markdown')).toEqual(['variable:[docs]', 'punctuation::', 'link:https://e.com/d', 'string: "D"'])
     expect(marks('Go to https://e.com/x, or <mailto:a@b.c>.', 'markdown')).toEqual(['link:https://e.com/x', 'link:<mailto:a@b.c>'])
+    // Internal links: the note, its heading, a text of its own; a picture by name.
+    expect(marks('See [[Road map#Next|what is next]] and ![[cat.png]].', 'markdown')).toEqual([
+      'punctuation:[[', 'link:Road map', 'variable:#Next', 'punctuation:|', 'string:what is next', 'punctuation:]]', 'punctuation:![[', 'link:cat.png', 'punctuation:]]',
+    ])
     // Square brackets that are not a link stay text.
     expect(marks('array[0] and [x]', 'markdown')).toEqual([])
   })
