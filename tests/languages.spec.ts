@@ -226,11 +226,36 @@ describe('formats', () => {
     expect(typeOf(csv, 'csv', '4.50')).toBe('number')
   })
 
+  it('Markdown: links in parts, a badge (an image in a link) whole, references, addresses', () => {
+    expect(marks('A [link](https://e.com/a "Title") here.', 'markdown')).toEqual(['punctuation:[', 'string:link', 'punctuation:](', 'link:https://e.com/a', 'string:"Title"', 'punctuation:)'])
+    expect(marks('[![tests](https://img/x.svg)](https://ci/y)', 'markdown')).toEqual([
+      'punctuation:[![', 'string:tests', 'punctuation:](', 'link:https://img/x.svg', 'punctuation:)](', 'link:https://ci/y', 'punctuation:)',
+    ])
+    expect(marks('See [the docs][docs] and [^1].', 'markdown')).toEqual(['punctuation:[', 'string:the docs', 'punctuation:][', 'variable:docs', 'punctuation:]', 'meta:[^1]'])
+    expect(marks('[docs]: https://e.com/d "D"', 'markdown')).toEqual(['variable:[docs]', 'punctuation::', 'link:https://e.com/d', 'string: "D"'])
+    expect(marks('Go to https://e.com/x, or <mailto:a@b.c>.', 'markdown')).toEqual(['link:https://e.com/x', 'link:<mailto:a@b.c>'])
+    // Square brackets that are not a link stay text.
+    expect(marks('array[0] and [x]', 'markdown')).toEqual([])
+  })
+
+  it('Markdown: the quoted text, a heading’s marker, strike-through, tables, tasks, HTML, front matter', () => {
+    expect(marks('> quoted **strong**\nafter', 'markdown')).toEqual(['punctuation:> ', 'comment:quoted ', 'strong:**strong**'])
+    expect(marks('## Title', 'markdown')).toEqual(['punctuation:##', 'heading: Title'])
+    // A line that starts with inline code in four backticks is not a fence.
+    expect(marks('```` ```js ```` and **bold**', 'markdown')).toEqual(['string:```` ```js ````', 'strong:**bold**'])
+    expect(marks('~~gone~~ and snake_case_name', 'markdown')).toEqual(['deleted:~~gone~~'])
+    expect(marks('| a | b |\n|---|:---:|\n| 1 | 2 |', 'markdown').filter((m) => m !== 'punctuation:|')).toEqual(['punctuation:|---|:---:|'])
+    expect(marks('- [x] done', 'markdown')).toEqual(['punctuation:-', 'keyword:[x]'])
+    expect(marks('Text <kbd>Ctrl</kbd> text', 'markdown')).toContain('tag:kbd')
+    expect(marks('---\ntitle: Hi\n---\n# H', 'markdown').slice(0, 3)).toEqual(['meta:---\n', 'property:title', 'punctuation::'])
+  })
+
   it('Markdown: headings, emphasis, links, a fenced block in its language', () => {
     const md = sample('sample.md')
-    expect(typeOf(md, 'markdown', '# Handbook')).toBe('heading')
+    expect(typeOf(md, 'markdown', 'Handbook', true)).toBe('heading')
     expect(typeOf(md, 'markdown', '**bold**')).toBe('strong')
-    expect(typeOf(md, 'markdown', '[link](https://example.com)')).toBe('link')
+    expect(typeOf(md, 'markdown', 'link')).toBe('string')
+    expect(typeOf(md, 'markdown', 'https://example.com')).toBe('link')
     expect(typeOf(md, 'markdown', 'def')).toBe('keyword')
     expect(typeOf(md, 'markdown', '"hi"')).toBe('string')
     expect(typeOf(md, 'markdown', 'plain block')).toBe('string')

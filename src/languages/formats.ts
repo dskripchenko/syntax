@@ -264,6 +264,23 @@ export const csv: Grammar = {
   },
 }
 
+/** Markdown's inline markup: code, emphasis, links (nested: a badge is an image in a link), HTML, addresses. */
+const mdInline: Rule[] = [
+  { match: /<!--[\s\S]*?(?:-->|$(?![\s\S]))/, token: 'comment' },
+  { match: /(`+)(?!`)[^\n]*?[^`\n]\1(?!`)|``(?!`)/, token: 'string' },
+  { match: /(\*\*|__)(?=\S)(?:(?!\n\n)[^\n]|\n)*?\S\1/, token: 'strong' },
+  { match: /(?<![\w*])(\*|_)(?=[^\s*_])(?:(?!\n\n)[^\n]|\n)*?[^\s\\]\1(?![\w*])/, token: 'emphasis' },
+  { match: /~~(?=\S)[^\n]*?\S~~/, token: 'deleted' },
+  // A footnote reference, then a link or an image: its label, then where it points.
+  { match: /\[\^[^\]\n]+\]/, token: 'meta' },
+  { match: /!?\[(?=[^\n]*\][([])/, token: 'punctuation', push: 'label' },
+  { match: /<(?:https?|mailto|ftp):[^>\s]+>|<[\w.+-]+@[\w-]+\.[\w.-]+>/, token: 'link' },
+  { match: /\b(?:https?|ftp):\/\/[^\s<>)\]]*[^\s<>)\].,;:!?'"]/, token: 'link' },
+  { match: /<\/?[A-Za-z][\w-]*(?:\s[^<>]*)?\/?>/, embed: 'html' },
+  { match: /\\[\\`*_{}[\]()#+\-.!|~<>]/, token: 'escape' },
+  { match: /&(?:#\d+|#x[\da-fA-F]+|[A-Za-z][\w]*);/, token: 'escape' },
+]
+
 export const markdown: Grammar = {
   id: 'markdown',
   name: 'Markdown',
@@ -271,24 +288,57 @@ export const markdown: Grammar = {
   extensions: ['.md', '.markdown', '.mdown', '.mkd', '.mdx'],
   states: {
     root: [
+      // Front matter at the very start: YAML between two `---` lines.
+      { match: /^(---\n)([\s\S]*?\n)(---)(?=\n|$(?![\s\S]))/, groups: ['meta', { embed: 'yaml', token: 'string' }, 'meta'] },
       // A fenced block: its fences as meta, its body in the language the fence names.
+      // A backtick fence's info has no backticks (CommonMark): ```` ```x ```` at a line's start is inline code.
       {
-        match: /^(`{3,}|~{3,})([ \t]*[\w+#.-]*[^\n]*\n)([\s\S]*?)(^\1[ \t]*$|$(?![\s\S]))/m,
+        match: /^ {0,3}(`{3,}(?=[^`\n]*\n)|~{3,})([^\n]*\n)([\s\S]*?)(^ {0,3}\1[ \t]*$|$(?![\s\S]))/m,
         groups: ['meta', 'meta', { embed: (m) => (m[2] ?? '').trim().split(/\s+/)[0]?.toLowerCase() || null, token: 'string' }, 'meta'],
       },
-      { match: /^#{1,6}[ \t].*/m, token: 'heading' },
+      { match: /^(#{1,6})([ \t].*|$)/m, groups: ['punctuation', 'heading'] },
       { match: /^.+\n(?:=+|-+)[ \t]*$/m, token: 'heading' },
       { match: /^[ \t]*(?:[-*_][ \t]*){3,}$/m, token: 'punctuation' },
-      { match: /^[ \t]*>+/m, token: 'punctuation' },
-      { match: /^[ \t]*(?:[-*+]|\d+[.)])(?=[ \t])(?:[ \t]+\[[ xX]\])?/m, token: 'punctuation' },
-      { match: /<!--[\s\S]*?(?:-->|$(?![\s\S]))/, token: 'comment' },
-      { match: /`[^`\n]+`/, token: 'string' },
-      { match: /(\*\*|__)(?=\S)[\s\S]*?\S\1/, token: 'strong' },
-      { match: /(\*|_)(?=\S)[^*_\n]*?\S\1/, token: 'emphasis' },
-      { match: /!?\[[^\]\n]*\]\([^)\n]*\)|!?\[[^\]\n]*\]\[[^\]\n]*\]|<(?:https?|mailto):[^>\s]+>/, token: 'link' },
-      { match: /^[ \t]*\[[^\]\n]+\]:.*/m, token: 'link' },
-      { match: /\\[\\`*_{}[\]()#+\-.!|]/, token: 'escape' },
-      { match: /[^\n`*_[!<\\#>-]+|[\s\S]/, token: 'plain' },
+      // A quote: its markers, then the quoted text in a colour of its own.
+      { match: /^[ \t]*(?:>[ \t]?)+/m, token: 'punctuation', push: 'quote' },
+      { match: /^([ \t]*(?:[-*+]|\d+[.)]))(?=[ \t])(?:([ \t]+)(\[[ xX]\]))?/m, groups: ['punctuation', 'plain', 'keyword'] },
+      // A link's definition: `[label]: address "title"`.
+      { match: /^([ \t]*)(\[[^\]\n]+\])(:)([ \t]*)(\S+)(.*)/m, groups: ['plain', 'variable', 'punctuation', 'plain', 'link', 'string'] },
+      // A table's rule row, and the cells' bars.
+      { match: /^[ \t]*\|?(?:[ \t]*:?-{3,}:?[ \t]*\|)+(?:[ \t]*:?-{3,}:?[ \t]*)?$/m, token: 'punctuation' },
+      { match: /\|/, token: 'punctuation' },
+      ...mdInline,
+      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&|A-Za-z]+|[\s\S]/, token: 'plain' },
+    ],
+    quote: [
+      { match: /\n/, token: 'plain', pop: 1 },
+      ...mdInline,
+      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&A-Za-z]+|[\s\S]/, token: 'comment' },
+    ],
+    // A link's text (where an image may sit, as in a badge), then its address or reference.
+    label: [
+      { match: /\](?=\()/, token: 'punctuation', next: 'target' },
+      { match: /\](?=\[)/, token: 'punctuation', next: 'reference' },
+      { match: /\]/, token: 'punctuation', pop: 1 },
+      { match: /\n\n/, token: 'plain', pop: 1 },
+      { match: /`[^`\n]*`/, token: 'string' },
+      { match: /!?\[(?=[^\n]*\][([])/, token: 'punctuation', push: 'label' },
+      { match: /\\[\][]/, token: 'escape' },
+      { match: /[^\]![`\\\n]+|[\s\S]/, token: 'string' },
+    ],
+    target: [
+      { match: /\(/, token: 'punctuation' },
+      { match: /\)/, token: 'punctuation', pop: 1 },
+      { match: /"[^"\n]*"|'[^'\n]*'/, token: 'string' },
+      { match: /<[^>\n]*>|[^\s()]+(?:\([^\s()]*\)[^\s()]*)*/, token: 'link' },
+      { match: /\n\n/, token: 'plain', pop: 1 },
+      { match: /[ \t\n]+|[\s\S]/, token: 'plain' },
+    ],
+    reference: [
+      { match: /\[/, token: 'punctuation' },
+      { match: /\]/, token: 'punctuation', pop: 1 },
+      { match: /\n/, token: 'plain', pop: 1 },
+      { match: /[^\]\n]+/, token: 'variable' },
     ],
   },
 }
