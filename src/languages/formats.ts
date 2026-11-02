@@ -323,7 +323,7 @@ export const markdown: Grammar = {
       { match: /\n\n/, token: 'plain', pop: 1 },
       { match: /`[^`\n]*`/, token: 'string' },
       { match: /!?\[(?=[^\n]*\][([])/, token: 'punctuation', push: 'label' },
-      { match: /\\[\]\[]/, token: 'escape' },
+      { match: /\\[\][]/, token: 'escape' },
       { match: /[^\]![`\\\n]+|[\s\S]/, token: 'string' },
     ],
     target: [
