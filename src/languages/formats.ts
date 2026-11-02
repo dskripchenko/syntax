@@ -272,6 +272,8 @@ const mdInline: Rule[] = [
   // inside the dollars, no digit after the closing one, so prices ($5 and $10) stay text.
   { match: /(\$\$)((?:[^$]|\$(?!\$))+?)(\$\$)/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
   { match: /(?<![\\$\w])(\$)(?![\s$])((?:\\\$|[^$\n])+?)(?<![\s\\])(\$)(?![\d$])/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
+  // A tag, as note-taking apps write it: #word, #nested/tag — a letter in it, at the start of a word.
+  { match: /(?<![^\s(\[{,;])#(?=[\p{L}\p{N}_/-]*[\p{L}_])[\p{L}\p{N}_][\p{L}\p{N}_/-]*/u, token: 'type' },
   // Highlighted text, as note-taking apps write it: ==marked==.
   { match: /(?<!=)==(?=[^\s=])[^\n]*?[^\s=]==(?!=)/, token: 'warning' },
   { match: /(\*\*|__)(?=\S)(?:(?!\n\n)[^\n]|\n)*?\S\1/, token: 'strong' },
@@ -337,12 +339,12 @@ export const markdown: Grammar = {
       { match: /^[ \t]*\|?(?:[ \t]*:?-{3,}:?[ \t]*\|)+(?:[ \t]*:?-{3,}:?[ \t]*)?$/m, token: 'punctuation' },
       { match: /\|/, token: 'punctuation' },
       ...mdInline,
-      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&|$=A-Za-z]+|[\s\S]/, token: 'plain' },
+      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&|$=#A-Za-z]+|[\s\S]/, token: 'plain' },
     ],
     quote: [
       { match: /\n/, token: 'plain', pop: 1 },
       ...mdInline,
-      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&$=A-Za-z]+|[\s\S]/, token: 'comment' },
+      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&$=#A-Za-z]+|[\s\S]/, token: 'comment' },
     ],
     // A link's text (where an image may sit, as in a badge), then its address or reference.
     label: [

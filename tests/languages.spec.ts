@@ -264,6 +264,12 @@ describe('formats', () => {
     expect(marks('```math\nx^2\n```', 'markdown')).toEqual(['meta:```math\n', 'operator:^', 'number:2', 'meta:```'])
   })
 
+  it('Markdown: #tags, not C#, #123 or a heading', () => {
+    expect(marks('Do #todo and #work/urgent, #задача; C# and #123.', 'markdown')).toEqual(['type:#todo', 'type:#work/urgent', 'type:#задача'])
+    expect(marks('#todo first', 'markdown')).toEqual(['type:#todo'])
+    expect(marks('# Title', 'markdown')).toEqual(['punctuation:#', 'heading: Title'])
+  })
+
   it('LaTeX: commands, environments, comments, math shifts, escapes', () => {
     const tex = sample('sample.tex')
     expect(typeOf(tex, 'latex', '\\documentclass')).toBe('keyword')
