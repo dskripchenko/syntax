@@ -271,6 +271,8 @@ const mdInline: Rule[] = [
   { match: /(\*\*|__)(?=\S)(?:(?!\n\n)[^\n]|\n)*?\S\1/, token: 'strong' },
   { match: /(?<![\w*])(\*|_)(?=[^\s*_])(?:(?!\n\n)[^\n]|\n)*?[^\s\\]\1(?![\w*])/, token: 'emphasis' },
   { match: /~~(?=\S)[^\n]*?\S~~/, token: 'deleted' },
+  // An internal link, as note-taking apps write it: [[note#heading|text]], ![[picture]].
+  { match: /!?\[\[(?=[^\]\n]+\]\])/, token: 'punctuation', push: 'wiki' },
   // A footnote reference, then a link or an image: its label, then where it points.
   { match: /\[\^[^\]\n]+\]/, token: 'meta' },
   { match: /!?\[(?=[^\n]*\][([])/, token: 'punctuation', push: 'label' },
@@ -333,6 +335,16 @@ export const markdown: Grammar = {
       { match: /<[^>\n]*>|[^\s()]+(?:\([^\s()]*\)[^\s()]*)*/, token: 'link' },
       { match: /\n\n/, token: 'plain', pop: 1 },
       { match: /[ \t\n]+|[\s\S]/, token: 'plain' },
+    ],
+    wiki: [
+      { match: /\]\]/, token: 'punctuation', pop: 1 },
+      { match: /\|/, token: 'punctuation', next: 'wikiText' },
+      { match: /#[^\]|\n]*/, token: 'variable' },
+      { match: /[^\]|#\n]+|[\s\S]/, token: 'link' },
+    ],
+    wikiText: [
+      { match: /\]\]/, token: 'punctuation', pop: 1 },
+      { match: /[^\]\n]+|[\s\S]/, token: 'string' },
     ],
     reference: [
       { match: /\[/, token: 'punctuation' },
