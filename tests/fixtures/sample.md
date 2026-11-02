@@ -15,3 +15,11 @@ def hello():
 ```unknown
 plain block
 ```
+
+## Math
+
+Inline $e^{i\pi} + 1 = 0$, a price of $5 and $10 stays text, ==highlighted== words.
+
+$$
+\sum_{i=1}^{n} i = \frac{n(n+1)}{2}
+$$

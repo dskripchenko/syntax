@@ -268,6 +268,12 @@ export const csv: Grammar = {
 const mdInline: Rule[] = [
   { match: /<!--[\s\S]*?(?:-->|$(?![\s\S]))/, token: 'comment' },
   { match: /(`+)(?!`)[^\n]*?[^`\n]\1(?!`)|``(?!`)/, token: 'string' },
+  // TeX math: `$$…$$` (on its own lines or in one), and `$…$` as Pandoc reads it — no space
+  // inside the dollars, no digit after the closing one, so prices ($5 and $10) stay text.
+  { match: /(\$\$)((?:[^$]|\$(?!\$))+?)(\$\$)/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
+  { match: /(?<![\\$\w])(\$)(?![\s$])((?:\\\$|[^$\n])+?)(?<![\s\\])(\$)(?![\d$])/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
+  // Highlighted text, as note-taking apps write it: ==marked==.
+  { match: /(?<!=)==(?=[^\s=])[^\n]*?[^\s=]==(?!=)/, token: 'warning' },
   { match: /(\*\*|__)(?=\S)(?:(?!\n\n)[^\n]|\n)*?\S\1/, token: 'strong' },
   { match: /(?<![\w*])(\*|_)(?=[^\s*_])(?:(?!\n\n)[^\n]|\n)*?[^\s\\]\1(?![\w*])/, token: 'emphasis' },
   { match: /~~(?=\S)[^\n]*?\S~~/, token: 'deleted' },
@@ -282,6 +288,27 @@ const mdInline: Rule[] = [
   { match: /\\[\\`*_{}[\]()#+\-.!|~<>]/, token: 'escape' },
   { match: /&(?:#\d+|#x[\da-fA-F]+|[A-Za-z][\w]*);/, token: 'escape' },
 ]
+
+/** TeX and LaTeX: commands, groups, math shifts, comments — for `.tex` files and math in Markdown. */
+export const latex: Grammar = {
+  id: 'latex',
+  name: 'LaTeX',
+  aliases: ['tex', 'math', 'katex'],
+  extensions: ['.tex', '.sty', '.cls', '.ltx'],
+  states: {
+    root: [
+      { match: /(?<!\\)%.*/, token: 'comment' },
+      // \begin{name} and \end{name}: the environment's name as a type.
+      { match: /(\\(?:begin|end))(\{)([^}\n]*)(\})/, groups: ['keyword', 'punctuation', 'type', 'punctuation'] },
+      { match: /\\[a-zA-Z@]+\*?/, token: 'keyword' },
+      { match: /\\[^a-zA-Z@\n]/, token: 'escape' },
+      { match: /[{}[\]]/, token: 'punctuation' },
+      { match: /\$\$?|[&^_~]/, token: 'operator' },
+      { match: /\d+(?:\.\d+)?/, token: 'number' },
+      { match: /[A-Za-z]+|[^\\%{}[\]$&^_~\dA-Za-z]+|[\s\S]/, token: 'plain' },
+    ],
+  },
+}
 
 export const markdown: Grammar = {
   id: 'markdown',
@@ -310,12 +337,12 @@ export const markdown: Grammar = {
       { match: /^[ \t]*\|?(?:[ \t]*:?-{3,}:?[ \t]*\|)+(?:[ \t]*:?-{3,}:?[ \t]*)?$/m, token: 'punctuation' },
       { match: /\|/, token: 'punctuation' },
       ...mdInline,
-      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&|A-Za-z]+|[\s\S]/, token: 'plain' },
+      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&|$=A-Za-z]+|[\s\S]/, token: 'plain' },
     ],
     quote: [
       { match: /\n/, token: 'plain', pop: 1 },
       ...mdInline,
-      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&A-Za-z]+|[\s\S]/, token: 'comment' },
+      { match: /[A-Za-z]+|[^\n`*_~[\]!<\\&$=A-Za-z]+|[\s\S]/, token: 'comment' },
     ],
     // A link's text (where an image may sit, as in a badge), then its address or reference.
     label: [
@@ -509,4 +536,4 @@ export const http: Grammar = {
   },
 }
 
-export const FORMATS: Grammar[] = [json, jsonc, jsonl, yaml, xml, html, css, toml, ini, env, csv, markdown, diff, log, dockerfile, makefile, graphql, protobuf, http]
+export const FORMATS: Grammar[] = [json, jsonc, jsonl, yaml, xml, html, css, toml, ini, env, csv, latex, markdown, diff, log, dockerfile, makefile, graphql, protobuf, http]
