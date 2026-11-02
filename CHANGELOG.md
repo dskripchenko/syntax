@@ -1,5 +1,11 @@
 # @dskripchenko/syntax
 
+## 0.4.0
+
+### Minor Changes
+
+- 1e38932: A LaTeX grammar (`latex`, also `tex`, `math`, `katex`; `.tex`, `.sty`, `.cls`): commands, environments, comments, math shifts. Markdown highlights TeX math in it — `$…$` as Pandoc reads it (prices stay text), `$$…$$`, a ```math block — and `==highlighted==` text.
+
 ## 0.3.4
 
 ### Patch Changes
