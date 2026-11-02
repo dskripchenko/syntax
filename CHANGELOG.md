@@ -1,5 +1,11 @@
 # @dskripchenko/syntax
 
+## 0.3.4
+
+### Patch Changes
+
+- 2852589: Markdown: internal links as note-taking apps write them — `[[note#heading|text]]`, `![[picture.png]]` — in parts: the brackets, the note (a link), the heading, the text.
+
 ## 0.3.3
 
 ### Patch Changes
