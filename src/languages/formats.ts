@@ -273,7 +273,7 @@ const mdInline: Rule[] = [
   { match: /(\$\$)((?:[^$]|\$(?!\$))+?)(\$\$)/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
   { match: /(?<![\\$\w])(\$)(?![\s$])((?:\\\$|[^$\n])+?)(?<![\s\\])(\$)(?![\d$])/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
   // A tag, as note-taking apps write it: #word, #nested/tag — a letter in it, at the start of a word.
-  { match: /(?<![^\s(\[{,;])#(?=[\p{L}\p{N}_/-]*[\p{L}_])[\p{L}\p{N}_][\p{L}\p{N}_/-]*/u, token: 'type' },
+  { match: /(?<![^\s([{,;])#(?=[\p{L}\p{N}_/-]*[\p{L}_])[\p{L}\p{N}_][\p{L}\p{N}_/-]*/u, token: 'type' },
   // Highlighted text, as note-taking apps write it: ==marked==.
   { match: /(?<!=)==(?=[^\s=])[^\n]*?[^\s=]==(?!=)/, token: 'warning' },
   { match: /(\*\*|__)(?=\S)(?:(?!\n\n)[^\n]|\n)*?\S\1/, token: 'strong' },
