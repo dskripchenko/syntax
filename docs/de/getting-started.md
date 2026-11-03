@@ -188,6 +188,28 @@ in einem Token, dessen Ende weit weg ist (ein gerade oben getipptes `/*`),
 bekommen sofort eine Schätzung; `settled(to)` sagt, ob sie endgültig sind, und
 `work(lines)` klärt sie in Leerlaufzeit. `reset(language?)` beginnt neu.
 
+## Symbole
+
+```ts
+import { symbols, symbolPath, flattenSymbols } from '@dskripchenko/syntax'
+
+const tree = symbols(code, 'typescript')
+// [{ name: 'Service', kind: 'class', line: 5, column: 14, endLine: 16, children: [
+//     { name: 'load', kind: 'method', line: 8, … }, …] }, …]
+symbolPath(tree, 9).map((s) => s.name) // ['Service', 'load'] — was Zeile 9 enthält
+flattenSymbols(tree) // alle Symbole, mit `container`: 'Service'
+```
+
+Die Funktionen, Klassen, Methoden, Typen und Konstanten von Code (JavaScript,
+TypeScript, Python, Go, Rust, Java, Kotlin, C#, Swift, C, C++, PHP, Ruby, Lua,
+Shell, PowerShell, SQL, GraphQL, Protocol Buffers), die Überschriften eines
+Dokuments, Schlüssel und Abschnitte einer Konfiguration, CSS-Selektoren,
+Makefile-Ziele, Dockerfile-Stufen — jedes mit den Zeilen, die es umfasst,
+verschachtelt wie geschrieben. Ohne Parser: Muster für Deklarationen über dem
+Text, dessen Kommentare und Zeichenketten ausgeblendet sind, sodass eine
+Deklaration in einem Kommentar oder einer Zeichenkette nie eine ist; die
+Bereiche ergeben sich aus Klammern, Einrückung oder Überschriften.
+
 ## Logs
 
 ```ts

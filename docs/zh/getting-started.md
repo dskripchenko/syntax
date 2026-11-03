@@ -166,6 +166,23 @@ h.work(2000)          // 空闲时：文件的其余部分，一次一块
 `settled(to)` 表明它们是否已是最终结果，`work(lines)` 在空闲时确定它们。
 `reset(language?)` 从头开始。
 
+## 符号
+
+```ts
+import { symbols, symbolPath, flattenSymbols } from '@dskripchenko/syntax'
+
+const tree = symbols(code, 'typescript')
+// [{ name: 'Service', kind: 'class', line: 5, column: 14, endLine: 16, children: [
+//     { name: 'load', kind: 'method', line: 8, … }, …] }, …]
+symbolPath(tree, 9).map((s) => s.name) // ['Service', 'load'] —— 包含第 9 行的符号
+flattenSymbols(tree) // 所有符号，带 `container`：'Service'
+```
+
+代码中的函数、类、方法、类型和常量（JavaScript、TypeScript、Python、Go、Rust、Java、Kotlin、C#、Swift、C、C++、
+PHP、Ruby、Lua、shell、PowerShell、SQL、GraphQL、Protocol Buffers），文档的标题，配置的键和节，CSS 选择器，
+Makefile 目标，Dockerfile 阶段——每个都带有所占的行，并按书写方式嵌套。不用解析器：在注释和字符串被抹去的文本上
+匹配声明模式，因此注释或字符串中的声明不会被当成符号；范围来自括号、缩进或标题。
+
 ## 日志
 
 ```ts
