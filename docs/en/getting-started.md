@@ -182,6 +182,27 @@ token whose end is far off (a `/*` just typed at the top), are given a guess
 at once; `settled(to)` tells whether they are final, and `work(lines)` settles
 them in idle time. `reset(language?)` starts over.
 
+## Symbols
+
+```ts
+import { symbols, symbolPath, flattenSymbols } from '@dskripchenko/syntax'
+
+const tree = symbols(code, 'typescript')
+// [{ name: 'Service', kind: 'class', line: 5, column: 14, endLine: 16, children: [
+//     { name: 'load', kind: 'method', line: 8, … }, …] }, …]
+symbolPath(tree, 9).map((s) => s.name) // ['Service', 'load'] — what holds line 9
+flattenSymbols(tree) // every symbol, with `container`: 'Service'
+```
+
+The functions, classes, methods, types and constants of code (JavaScript,
+TypeScript, Python, Go, Rust, Java, Kotlin, C#, Swift, C, C++, PHP, Ruby, Lua,
+shell, PowerShell, SQL, GraphQL, Protocol Buffers), a document's headings, a
+config's keys and sections, CSS selectors, Makefile targets, Dockerfile
+stages — each with the lines it spans, nested as written. No parser:
+declaration patterns over the text with its comments and strings blanked out,
+so a declaration in a comment or a string is never one; ranges come from the
+brackets, the indentation or the headings.
+
 ## Logs
 
 ```ts

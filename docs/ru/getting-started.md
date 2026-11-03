@@ -185,6 +185,27 @@ h.work(2000)          // в простое: остаток файла по ку�
 `settled(to)` говорит, окончательны ли они, а `work(lines)` доводит их в
 простое. `reset(language?)` начинает заново.
 
+## Символы
+
+```ts
+import { symbols, symbolPath, flattenSymbols } from '@dskripchenko/syntax'
+
+const tree = symbols(code, 'typescript')
+// [{ name: 'Service', kind: 'class', line: 5, column: 14, endLine: 16, children: [
+//     { name: 'load', kind: 'method', line: 8, … }, …] }, …]
+symbolPath(tree, 9).map((s) => s.name) // ['Service', 'load'] — что содержит строку 9
+flattenSymbols(tree) // все символы с `container`: 'Service'
+```
+
+Функции, классы, методы, типы и константы кода (JavaScript, TypeScript,
+Python, Go, Rust, Java, Kotlin, C#, Swift, C, C++, PHP, Ruby, Lua, shell,
+PowerShell, SQL, GraphQL, Protocol Buffers), заголовки документа, ключи и
+секции конфигов, селекторы CSS, цели Makefile, стадии Dockerfile — у каждого
+строки, которые он занимает, с вложенностью как в тексте. Без разборщика:
+шаблоны объявлений по тексту, где комментарии и строки затёрты, поэтому
+объявление в комментарии или строке символом не становится; границы — по
+скобкам, отступам или заголовкам.
+
 ## Логи
 
 ```ts
