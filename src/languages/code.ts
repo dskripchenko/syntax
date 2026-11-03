@@ -163,7 +163,7 @@ const rustStates = (): Grammar['states'] => {
       { match: /[A-Za-z_]\w*!(?=\s*[([{])/, token: 'function' },
     ],
     strings: [
-      { match: /b?r(#*)"[\s\S]*?"\1/, token: 'string' },
+      { match: /b?r(#*)"[\s\S]*?(?:"\1|$(?![\s\S]))/, token: 'string' },
       { match: /b?"(?:\\[\s\S]|[^"\\])*"?/, token: 'string' },
       { match: /b?'(?:\\(?:x[\da-fA-F]{2}|u\{[\da-fA-F]{1,6}\}|.)|[^'\\\n])'/, token: 'string' },
       { match: /'[A-Za-z_]\w*/, token: 'type' },
@@ -261,11 +261,11 @@ export const cpp: Grammar = {
     types: 'bool char char8_t char16_t char32_t double float int long short signed unsigned void wchar_t size_t std string vector map',
     constants: 'true false nullptr NULL',
     preprocessor: true,
-    strings: [{ match: /R"([^(\s]*)\([\s\S]*?\)\1"/, token: 'string' }, DQ, { match: /'(?:\\.|[^'\\\n])+'/, token: 'string' }],
+    strings: [{ match: /R"([^(\s]*)\([\s\S]*?(?:\)\1"|$(?![\s\S]))/, token: 'string' }, DQ, { match: /'(?:\\.|[^'\\\n])+'/, token: 'string' }],
   }),
 }
 
-const HEREDOC = /<<<\s*(['"]?)([A-Za-z_]\w*)\1\r?\n[\s\S]*?\r?\n[ \t]*\2\b/
+const HEREDOC = /<<<\s*(['"]?)([A-Za-z_]\w*)\1\r?\n[\s\S]*?(?:\r?\n[ \t]*\2\b|$(?![\s\S]))/
 const phpCode: Rule[] = [
   WS,
   { match: /\?>/, token: 'meta', pop: 1 },
@@ -300,9 +300,10 @@ export const php: Grammar = {
   shebang: /\bphp\b/,
   states: {
     root: [
-      // A fragment without `<?` (a snippet in documentation) is code, not a page.
-      { match: /^(?![\s\S]*<\?)/, push: 'php' },
       { match: /<\?(?:php\b|=)?/, token: 'meta', push: 'php' },
+      { match: /^#!.*/, token: 'meta' },
+      // A text that does not start with markup (a snippet in documentation) is code, not a page.
+      { match: /^(?=\s*[^<\s])/, push: 'php' },
       // Around the code: the page's HTML.
       { match: /[\s\S]+?(?=<\?|$(?![\s\S]))/, embed: 'html' },
     ],
@@ -322,11 +323,11 @@ export const ruby: Grammar = {
       WS,
       { match: /^=begin\b[\s\S]*?(?:^=end\b.*|$(?![\s\S]))/m, token: 'comment' },
       LINE_COMMENT('#'),
-      { match: /<<[~-]?(['"]?)([A-Z_]\w*)\1[^\n]*\n[\s\S]*?\n[ \t]*\2\b/, token: 'string' },
+      { match: /<<[~-]?(['"]?)([A-Z_]\w*)\1[^\n]*\n[\s\S]*?(?:\n[ \t]*\2\b|$(?![\s\S]))/, token: 'string' },
       DQ,
       SQ,
-      { match: /%[wWiIqQ]?([[({<])[\s\S]*?[\])}>]/, token: 'string' },
-      { match: /:(?:[A-Za-z_]\w*[?!=]?|"[^"]*")/, token: 'constant' },
+      { match: /%[wWiIqQ]?([[({<])[\s\S]*?(?:[\])}>]|$(?![\s\S]))/, token: 'string' },
+      { match: /:(?:[A-Za-z_]\w*[?!=]?|"[^"\n]*")/, token: 'constant' },
       { match: /@@?[A-Za-z_]\w*|\$[A-Za-z_]\w*/, token: 'variable' },
       REGEX,
       NUMBER,
@@ -354,9 +355,9 @@ export const lua: Grammar = {
   states: {
     root: [
       WS,
-      { match: /--\[(=*)\[[\s\S]*?\]\1\]/, token: 'comment' },
+      { match: /--\[(=*)\[[\s\S]*?(?:\]\1\]|$(?![\s\S]))/, token: 'comment' },
       LINE_COMMENT('--'),
-      { match: /\[(=*)\[[\s\S]*?\]\1\]/, token: 'string' },
+      { match: /\[(=*)\[[\s\S]*?(?:\]\1\]|$(?![\s\S]))/, token: 'string' },
       DQ,
       SQ,
       NUMBER,
@@ -382,7 +383,7 @@ export const bash: Grammar = {
       WS,
       { match: /^#!.*/, token: 'meta' },
       { match: /(?<![\w$#{])#.*/, token: 'comment' },
-      { match: /<<-?\s*(['"]?)([A-Za-z_]\w*)\1[^\n]*\n[\s\S]*?\n[ \t]*\2\b/, token: 'string' },
+      { match: /<<-?\s*(['"]?)([A-Za-z_]\w*)\1[^\n]*\n[\s\S]*?(?:\n[ \t]*\2\b|$(?![\s\S]))/, token: 'string' },
       { match: /"/, token: 'string', push: 'dq' },
       { match: /'[^']*'?/, token: 'string' },
       { match: /\$\{[^}\n]*\}?|\$\(\(?|\$[\w@#?$!*-]/, token: 'variable' },
@@ -419,10 +420,10 @@ export const powershell: Grammar = {
       WS,
       { match: /<#[\s\S]*?(?:#>|$(?![\s\S]))/, token: 'comment' },
       LINE_COMMENT('#'),
-      { match: /@"[\s\S]*?\n"@|@'[\s\S]*?\n'@/, token: 'string' },
+      { match: /@"[\s\S]*?(?:\n"@|$(?![\s\S]))|@'[\s\S]*?(?:\n'@|$(?![\s\S]))/, token: 'string' },
       DQ,
       { match: /'(?:''|[^'])*'?/, token: 'string' },
-      { match: /\$(?:\{[^}]*\}|[\w:]+)/, token: 'variable' },
+      { match: /\$(?:\{[^}\n]*\}|[\w:]+)/, token: 'variable' },
       NUMBER,
       { match: words('true false null', 'i'), token: 'constant' },
       {
@@ -450,7 +451,7 @@ export const sql: Grammar = {
       LINE_COMMENT('--'),
       BLOCK_COMMENT,
       { match: /'(?:''|[^'])*'?/, token: 'string' },
-      { match: /"(?:""|[^"])*"|`[^`]*`/, token: 'variable' },
+      { match: /"(?:""|[^"])*"?|`[^`]*`?/, token: 'variable' },
       { match: /\$\d+|:[A-Za-z_]\w*|\?/, token: 'variable' },
       NUMBER,
       { match: words('true false null', 'i'), token: 'constant' },

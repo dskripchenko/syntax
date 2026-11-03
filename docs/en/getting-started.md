@@ -152,6 +152,36 @@ still a comment). `html(from, to, maxLength)` cuts a long line — minified code
 — at `maxLength` characters; `tokens(from, to)` gives the tokens instead;
 `line(i)` the text.
 
+## Text being edited
+
+```ts
+import { IncrementalHighlighter } from '@dskripchenko/syntax'
+
+const lines = { lineCount: doc.lineCount, lineText: (i) => doc.lineText(i) } // or any TextSource
+const h = new IncrementalHighlighter(lines, 'typescript')
+h.tokens(0, 40)       // the lines in view, as tokens
+
+// Lines 10 to 12 of the old text are now lines 10 to 15.
+h.edit(10, 12, 15)
+h.tokens(0, 40)       // tokenized again from a little before line 10, until it is back as it was
+h.settled(40)         // true: no guess among the lines asked for
+h.work(2000)          // in idle time: the rest of the file, a piece at a time
+```
+
+`IncrementalHighlighter` keeps the tokenizer's state at the start of every
+line. After an edit it tokenizes again from a little before it — the start of
+its paragraph, or before a token over many lines that it touches — and stops
+at the first line after it whose state is what it was: from there on nothing
+has changed. A keystroke costs a few lines, however long the file. The tokens
+are always those `tokenizeLines` gives for the whole text.
+
+The text is read line by line through a `TextSource` (`lineCount`,
+`lineText(i)`), so an editor keeps it in its own model. Lines far ahead of
+what is tokenized (a jump to the end of a file just opened), or inside a
+token whose end is far off (a `/*` just typed at the top), are given a guess
+at once; `settled(to)` tells whether they are final, and `work(lines)` settles
+them in idle time. `reset(language?)` starts over.
+
 ## Logs
 
 ```ts

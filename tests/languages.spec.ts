@@ -331,4 +331,14 @@ describe('formats', () => {
     expect(typeOf(http, 'http', 'Content-Type')).toBe('property')
     expect(typeOf(http, 'http', '"sku"')).toBe('property')
   })
+
+  it('what spans lines reads the same in a part of the text: unclosed runs to the end, Markdown stays in its paragraph', () => {
+    expect(typeOf('<?php\n$a = <<<EOT\nnot closed\n$b', 'php', 'not closed', true)).toBe('string')
+    expect(typeOf('cat <<EOF\nnever closed', 'shell', 'never closed', true)).toBe('string')
+    expect(typeOf('let s = r#"raw\nstill', 'rust', 'still', true)).toBe('string')
+    expect(typeOf('a *b\n\nc* d', 'markdown', '*b', true)).not.toBe('emphasis')
+    expect(typeOf('a *b\nc* d', 'markdown', '*b', true)).toBe('emphasis')
+    expect(typeOf('$x = 1; ?>\n<p>', 'php', '$x')).toBe('variable')
+    expect(typeOf('#!/usr/bin/env php\n<?php echo 1;', 'php', 'echo')).toBe('keyword')
+  })
 })

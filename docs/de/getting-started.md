@@ -157,6 +157,37 @@ Text liefert (ein 300 Zeilen weiter oben geöffneter Kommentar bleibt einer).
 nach `maxLength` Zeichen ab; `tokens(from, to)` liefert die Tokens; `line(i)`
 den Text.
 
+## Text, der bearbeitet wird
+
+```ts
+import { IncrementalHighlighter } from '@dskripchenko/syntax'
+
+const lines = { lineCount: doc.lineCount, lineText: (i) => doc.lineText(i) } // oder jede TextSource
+const h = new IncrementalHighlighter(lines, 'typescript')
+h.tokens(0, 40)       // die sichtbaren Zeilen als Tokens
+
+// Die Zeilen 10 bis 12 des alten Textes sind jetzt die Zeilen 10 bis 15.
+h.edit(10, 12, 15)
+h.tokens(0, 40)       // neu zerlegt ab kurz vor Zeile 10, bis alles wieder ist wie zuvor
+h.settled(40)         // true: keine Schätzung unter den angefragten Zeilen
+h.work(2000)          // in Leerlaufzeit: der Rest der Datei, Stück für Stück
+```
+
+`IncrementalHighlighter` merkt sich den Zustand des Tokenizers am Anfang jeder
+Zeile. Nach einer Änderung zerlegt er den Text ab kurz davor neu — ab dem
+Anfang ihres Absatzes oder vor einem mehrzeiligen Token, das sie berührt — und
+hört bei der ersten Zeile danach auf, deren Zustand derselbe ist wie zuvor: ab
+dort hat sich nichts geändert. Ein Tastendruck kostet ein paar Zeilen, egal wie
+lang die Datei ist. Die Tokens sind immer die, die `tokenizeLines` für den
+ganzen Text liefert.
+
+Der Text wird zeilenweise über eine `TextSource` (`lineCount`, `lineText(i)`)
+gelesen, ein Editor behält ihn also in seinem eigenen Modell. Zeilen weit vor
+dem bereits Zerlegten (ein Sprung ans Ende einer gerade geöffneten Datei) oder
+in einem Token, dessen Ende weit weg ist (ein gerade oben getipptes `/*`),
+bekommen sofort eine Schätzung; `settled(to)` sagt, ob sie endgültig sind, und
+`work(lines)` klärt sie in Leerlaufzeit. `reset(language?)` beginnt neu.
+
 ## Logs
 
 ```ts
