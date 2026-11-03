@@ -138,6 +138,34 @@ h.html(1000, 1040) // 可见的 40 行，HTML，每行自成完整
 `html(from, to, maxLength)` 会把过长的行（压缩后的代码）截断到 `maxLength` 个字符；`tokens(from, to)` 返回 token；
 `line(i)` 返回该行文本。
 
+## 编辑中的文本
+
+```ts
+import { IncrementalHighlighter } from '@dskripchenko/syntax'
+
+const lines = { lineCount: doc.lineCount, lineText: (i) => doc.lineText(i) } // 或任何 TextSource
+const h = new IncrementalHighlighter(lines, 'typescript')
+h.tokens(0, 40)       // 可见的行，以 token 形式
+
+// 旧文本的第 10 到 12 行现在是第 10 到 15 行。
+h.edit(10, 12, 15)
+h.tokens(0, 40)       // 从第 10 行稍前处重新分词，直到状态恢复如前
+h.settled(40)         // true：所请求的行中没有猜测
+h.work(2000)          // 空闲时：文件的其余部分，一次一块
+```
+
+`IncrementalHighlighter` 在每一行的开头保存分词器的状态。编辑之后，它从编辑
+稍前处重新分词——从所在段落的开头，或从编辑触及的跨多行 token 之前——并在
+编辑之后第一个状态与之前相同的行停下：从那里起什么都没有改变。无论文件多长，
+一次按键只需处理几行。得到的 token 始终与 `tokenizeLines` 对整个文本给出的
+相同。
+
+文本通过 `TextSource`（`lineCount`、`lineText(i)`）逐行读取，因此编辑器可以
+把文本保存在自己的模型中。远在已分词部分之后的行（跳到刚打开文件的末尾），
+或位于结尾很远的 token 之内的行（刚在开头输入的 `/*`），会立即得到一个猜测；
+`settled(to)` 表明它们是否已是最终结果，`work(lines)` 在空闲时确定它们。
+`reset(language?)` 从头开始。
+
 ## 日志
 
 ```ts

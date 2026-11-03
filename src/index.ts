@@ -20,6 +20,7 @@ export { validate, canValidate, VALIDATED, type Diagnostic } from './validate'
 export { foldRanges, type FoldRange } from './fold'
 export { escapeHtml } from './html'
 export { LineHighlighter } from './lines'
+export { IncrementalHighlighter, type TextSource, type IncrementalHighlighterOptions } from './incremental'
 export { logEntries, logLevelOf, LOG_LEVELS, type LogEntry, type LogLevel } from './log'
 
 for (const g of [...CODE, ...FORMATS]) register(g)

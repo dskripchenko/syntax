@@ -79,7 +79,7 @@ const markup = (html: boolean): Grammar['states'] => ({
   root: [
     { match: /<!--[\s\S]*?(?:-->|$(?![\s\S]))/, token: 'comment' },
     { match: /<!\[CDATA\[[\s\S]*?(?:\]\]>|$(?![\s\S]))/, token: 'string' },
-    { match: /<![A-Za-z][\s\S]*?>|<\?[\s\S]*?(?:\?>|$(?![\s\S]))/, token: 'meta' },
+    { match: /<![A-Za-z][\s\S]*?(?:>|$(?![\s\S]))|<\?[\s\S]*?(?:\?>|$(?![\s\S]))/, token: 'meta' },
     ...(html
       ? [
           { match: /(<)(script)\b/i, groups: ['punctuation', 'tag'], push: 'scriptTag' } as Rule,
@@ -270,14 +270,15 @@ const mdInline: Rule[] = [
   { match: /(`+)(?!`)[^\n]*?[^`\n]\1(?!`)|``(?!`)/, token: 'string' },
   // TeX math: `$$…$$` (on its own lines or in one), and `$…$` as Pandoc reads it — no space
   // inside the dollars, no digit after the closing one, so prices ($5 and $10) stay text.
-  { match: /(\$\$)((?:[^$]|\$(?!\$))+?)(\$\$)/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
+  { match: /(\$\$)((?:[^$\n]|\n(?![ \t]*\n)|\$(?!\$))+?)(\$\$)/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
   { match: /(?<![\\$\w])(\$)(?![\s$])((?:\\\$|[^$\n])+?)(?<![\s\\])(\$)(?![\d$])/, groups: ['punctuation', { embed: 'latex', token: 'string' }, 'punctuation'] },
   // A tag, as note-taking apps write it: #word, #nested/tag — a letter in it, at the start of a word.
   { match: /(?<![^\s([{,;])#(?=[\p{L}\p{N}_/-]*[\p{L}_])[\p{L}\p{N}_][\p{L}\p{N}_/-]*/u, token: 'type' },
   // Highlighted text, as note-taking apps write it: ==marked==.
   { match: /(?<!=)==(?=[^\s=])[^\n]*?[^\s=]==(?!=)/, token: 'warning' },
-  { match: /(\*\*|__)(?=\S)(?:(?!\n\n)[^\n]|\n)*?\S\1/, token: 'strong' },
-  { match: /(?<![\w*])(\*|_)(?=[^\s*_])(?:(?!\n\n)[^\n]|\n)*?[^\s\\]\1(?![\w*])/, token: 'emphasis' },
+  // Within a paragraph: not over a blank line.
+  { match: /(\*\*|__)(?=\S)(?:[^\n]|\n(?![ \t]*\n))*?\S\1/, token: 'strong' },
+  { match: /(?<![\w*])(\*|_)(?=[^\s*_])(?:[^\n]|\n(?![ \t]*\n))*?[^\s\\]\1(?![\w*])/, token: 'emphasis' },
   { match: /~~(?=\S)[^\n]*?\S~~/, token: 'deleted' },
   // An internal link, as note-taking apps write it: [[note#heading|text]], ![[picture]].
   { match: /!?\[\[(?=[^\]\n]+\]\])/, token: 'punctuation', push: 'wiki' },
@@ -286,7 +287,7 @@ const mdInline: Rule[] = [
   { match: /!?\[(?=[^\n]*\][([])/, token: 'punctuation', push: 'label' },
   { match: /<(?:https?|mailto|ftp):[^>\s]+>|<[\w.+-]+@[\w-]+\.[\w.-]+>/, token: 'link' },
   { match: /\b(?:https?|ftp):\/\/[^\s<>)\]]*[^\s<>)\].,;:!?'"]/, token: 'link' },
-  { match: /<\/?[A-Za-z][\w-]*(?:\s[^<>]*)?\/?>/, embed: 'html' },
+  { match: /<\/?[A-Za-z][\w-]*(?:\s(?:[^<>\n]|\n(?![ \t]*\n))*)?\/?>/, embed: 'html' },
   { match: /\\[\\`*_{}[\]()#+\-.!|~<>]/, token: 'escape' },
   { match: /&(?:#\d+|#x[\da-fA-F]+|[A-Za-z][\w]*);/, token: 'escape' },
 ]
@@ -317,6 +318,7 @@ export const markdown: Grammar = {
   name: 'Markdown',
   aliases: ['md', 'mdx'],
   extensions: ['.md', '.markdown', '.mdown', '.mkd', '.mdx'],
+  restartAtTop: /^---$/,
   states: {
     root: [
       // Front matter at the very start: YAML between two `---` lines.

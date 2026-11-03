@@ -82,6 +82,12 @@ export interface Grammar {
   filenames?: string[]
   /** An interpreter named on the first line (`#!/usr/bin/env python3`). */
   shebang?: RegExp
+  /**
+   * A line that, once written, may change how the text reads from its very
+   * start (Markdown's front matter, closed by a `---` line): an edit that
+   * writes one is highlighted again from the top.
+   */
+  restartAtTop?: RegExp
   states: Record<string, Rule[]>
 }
 
